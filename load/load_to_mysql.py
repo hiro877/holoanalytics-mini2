@@ -10,6 +10,7 @@ load_dotenv()
 # ---- 1. env ----
 BUCKET      = os.environ["S3_BUCKET"]           # holoanalytics-raw
 S3_KEY      = f"youtube/{os.environ['LOAD_DATE']}.csv"  # 例: 2025-06-23.csv
+
 AWS_REGION  = os.getenv("AWS_REGION", "ap-northeast-1")
 
 DB_HOST     = os.environ["RDS_HOST"]            # holoanalytics-dev.cxxxx.rds.amazonaws.com
@@ -20,7 +21,7 @@ DB_NAME     = "raw"
 # ---- 2. S3 から一時ファイルにDL ----
 with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as tmp:
     tmp_path = tmp.name  # パスを保存して、閉じる（Windows対策）
-
+print(BUCKET, ", ", S3_KEY)
 s3 = boto3.client("s3", region_name=AWS_REGION)
 s3.download_file(BUCKET, S3_KEY, tmp_path)
 print(f"[✓] downloaded {S3_KEY} to {tmp_path}")
