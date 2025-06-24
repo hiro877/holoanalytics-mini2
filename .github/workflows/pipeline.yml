@@ -70,7 +70,6 @@ jobs:
     # ---------- Load ----------
     - name: Run Load (S3 → RDS)
       run: |
-        export LOAD_DATE=$(date -u +%F)   # 当日UTC→JST同日で十分
         poetry run python load/load_to_mysql.py
 
     # ---------- Transform ----------

@@ -3,13 +3,19 @@ import tempfile
 import boto3
 import pandas as pd
 import mysql.connector
+import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
 
 # ---- 1. env ----
 BUCKET      = os.environ["S3_BUCKET"]           # holoanalytics-raw
-S3_KEY      = f"youtube/{os.environ['LOAD_DATE']}.csv"  # 例: 2025-06-23.csv
+# --- 日付キー (JST) ---
+today = datetime.datetime.now(
+    datetime.timezone(datetime.timedelta(hours=9))
+).strftime("%Y-%m-%d")
+
+S3_KEY = f"youtube/{today}.csv"    # ← 環境変数 LOAD_DATE は不要
 
 AWS_REGION  = os.getenv("AWS_REGION", "ap-northeast-1")
 
@@ -21,6 +27,7 @@ DB_NAME     = "raw"
 # ---- 2. S3 から一時ファイルにDL ----
 with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as tmp:
     tmp_path = tmp.name  # パスを保存して、閉じる（Windows対策）
+
 print(BUCKET, ", ", S3_KEY)
 s3 = boto3.client("s3", region_name=AWS_REGION)
 s3.download_file(BUCKET, S3_KEY, tmp_path)
