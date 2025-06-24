@@ -11,6 +11,5 @@ models:
         description: "YouTube チャンネル ID"
         tests:
           - not_null
-          - unique
       - name: date
         description: "取得日 (JST)"
