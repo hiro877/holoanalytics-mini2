@@ -42,6 +42,14 @@ jobs:
     - name: Install deps
       run: poetry install --no-root --only main
 
+    # ★★★ ③ ここに追加します ★★★
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region:            ${{ secrets.AWS_REGION }}
+
     # ---------- .env を生成 (Secrets → ファイル化) ----------
     - name: Write runtime .env
       run: |
