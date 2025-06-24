@@ -1,0 +1,90 @@
+name: nightly-etl
+
+on:
+  schedule:
+    - cron: '30 15 * * *'   # 毎日 0:30 JST (= 15:30 UTC)
+  workflow_dispatch:
+  push:
+    branches: [ main ]      # main に push でも起動
+
+env:
+  PYTHON_VERSION: '3.11'
+  POETRY_CACHE_DIR: ~/.cache/pypoetry
+
+jobs:
+  etl:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # ---------- Python + Poetry ----------
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install Poetry
+      run: pip install poetry
+
+    - name: Poetry cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/pypoetry
+          ~/.cache/pip
+        key: poetry-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: poetry-${{ runner.os }}-
+
+    - name: Install deps
+      run: poetry install --no-root --only main
+
+    # ---------- .env を生成 (Secrets → ファイル化) ----------
+    - name: Write runtime .env
+      run: |
+        cat <<EOF > .env
+        YT_API_KEY=${{ secrets.YT_API_KEY }}
+        CHANNEL_ID=${{ secrets.CHANNEL_ID }}
+        AWS_REGION=${{ secrets.AWS_REGION }}
+        S3_BUCKET=${{ secrets.S3_BUCKET }}
+        RDS_HOST=${{ secrets.RDS_HOST }}
+        RDS_USER=${{ secrets.RDS_USER }}
+        RDS_PASS=${{ secrets.RDS_PASS }}
+        EOF
+
+    # ---------- Extract ----------
+    - name: Run Extract (YouTube → S3)
+      run: poetry run python extract/youtube_fetch.py
+
+    # ---------- Load ----------
+    - name: Run Load (S3 → RDS)
+      run: |
+        export LOAD_DATE=$(date -u +%F)   # 当日UTC→JST同日で十分
+        poetry run python load/load_to_mysql.py
+
+    # ---------- Transform ----------
+    - name: dbt build
+      working-directory: transform
+      env:
+        DB_HOST: ${{ secrets.RDS_HOST }}
+        DB_USER: ${{ secrets.RDS_USER }}
+        DB_PASS: ${{ secrets.RDS_PASS }}
+      run: |
+        poetry run dbt build
+
+    # ---------- Docs ----------
+    - name: Generate dbt docs
+      if: success()
+      working-directory: transform
+      run: poetry run dbt docs generate
+
+    - name: Upload docs artifact
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: dbt_docs
+        path: transform/target
+        retention-days: 7

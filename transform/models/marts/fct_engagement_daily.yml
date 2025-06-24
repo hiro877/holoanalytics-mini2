@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: fct_engagement_daily
+    description: "日次の再生・登録者増分を持つ Mart テーブル"
+    meta:
+      owner: tatto
+      source: YouTube Data API v3
+    columns:
+      - name: views_daily
+        description: "1 日あたりの再生回数増分"
+        tests:
+          - not_null
+          - positive_values    # 自作マクロ（負値禁止）
+      - name: subs_daily
+        description: "1 日あたりの登録者数増分"
+        tests:
+          - positive_values

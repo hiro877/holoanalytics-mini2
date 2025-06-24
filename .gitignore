@@ -1,0 +1,48 @@
+# ────────────── Python & Poetry ──────────────
+# 仮想環境（Poetry が自動で作る .venv フォルダを含む）
+.venv/
+# 一般的なビルド生成物
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+dist/
+build/
+
+# Poetry キャッシュ（任意：容量が気になる場合のみ）
+# ~/.cache/pypoetry/ はユーザーディレクトリなので通常は不要
+
+# ────────────── dbt ──────────────
+# コンパイル結果・テスト出力
+transform/target/
+transform/dbt_packages/        # dbt deps で落ちる依存
+transform/logs/
+# dbt cloud のローカルキャッシュ
+dbt_modules/
+
+# ────────────── Terraform ──────────────
+infra/.terraform/
+infra/.terraform.lock.hcl
+
+# ────────────── 環境変数・機密ファイル ──────────────
+.env
+.env.*
+# AWS 認証情報 (念のため)
+*.pem
+*.key
+*.cer
+
+# ────────────── エディタ / OS 依存ファイル ──────────────
+# VSCode
+.vscode/
+# JetBrains IDE
+.idea/
+# macOS / Windows
+.DS_Store
+Thumbs.db
+
+# ────────────── その他 ──────────────
+# ローカル中間データ
+data/

@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: stg_youtube_stats
+    description: "raw.youtube_stats を整形したステージングビュー"
+    meta:                       # ← ★ モデル配下に配置
+      owner: tatto
+      source: YouTube Data API v3
+    columns:
+      - name: channel_id
+        description: "YouTube チャンネル ID"
+        tests:
+          - not_null
+          - unique
+      - name: date
+        description: "取得日 (JST)"
