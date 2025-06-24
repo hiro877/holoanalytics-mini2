@@ -67,6 +67,29 @@ jobs:
     - name: Run Extract (YouTube → S3)
       run: poetry run python extract/youtube_fetch.py
 
+    # --- Setup dbt profile -------------------------------------------------
+    - name: Write ~/.dbt/profiles.yml
+      run: |
+        mkdir -p ~/.dbt
+        cat <<EOF > ~/.dbt/profiles.yml
+        holoanalytics:
+          target: dev
+          outputs:
+            dev:
+              type: mysql
+              server: ${DB_HOST}
+              port: 3306
+              user: ${DB_USER}
+              password: ${DB_PASS}
+              database: raw
+              schema: raw        # MySQL adapter では database と同義
+              threads: 4
+        EOF
+      env:
+        DB_HOST: ${{ secrets.RDS_HOST }}
+        DB_USER: ${{ secrets.RDS_USER }}
+        DB_PASS: ${{ secrets.RDS_PASS }}
+
     # ---------- Load ----------
     - name: Run Load (S3 → RDS)
       run: |
